@@ -10,14 +10,15 @@ import eu.rethink.mn.pipeline.message.PipeMessage;
 import eu.rethink.mn.pipeline.message.ReplyCode;
 
 public class SessionManager implements IComponent {
-	final PipeRegistry register;
+	public final PipeRegistry register;
+	public final static String name = "mn:/session";
 	
 	public SessionManager(PipeRegistry register) {
 		this.register = register;
 	}
 	
 	@Override
-	public String getName() { return "mn:/session"; }
+	public String getName() { return name; }
 	
 	@Override
 	public void handle(PipeContext ctx) {

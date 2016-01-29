@@ -15,6 +15,7 @@ import eu.rethink.mn.component.SessionManager;
 import eu.rethink.mn.component.SubscriptionManager;
 import eu.rethink.mn.pipeline.PipeRegistry;
 import eu.rethink.mn.pipeline.Pipeline;
+import eu.rethink.mn.pipeline.handlers.AuthPipeHandler;
 import eu.rethink.mn.pipeline.handlers.TransitionPipeHandler;
 import eu.rethink.mn.pipeline.handlers.ValidatorPipeHandler;
 import io.vertx.core.AbstractVerticle;
@@ -133,6 +134,7 @@ public class MsgNode extends AbstractVerticle {
 		final Pipeline pipeline = new Pipeline(register)
 			.addHandler(new ValidatorPipeHandler())
 			.addHandler(new TransitionPipeHandler())
+			.addHandler(new AuthPipeHandler())
 			.failHandler(error -> {
 				out.println("PIPELINE-FAIL: " + error);
 			});
