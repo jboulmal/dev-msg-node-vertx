@@ -26,9 +26,9 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 		}
 		else	
 		{
-			final String accessToken = body.getString("access_token");
+			final String accessToken = body.getString("accessToken");
 			if (accessToken == null){
-				ctx.fail(NAME, "No mandatory field 'access_token'");
+				ctx.fail(NAME, "No mandatory field 'accessToken'");
 			}
 			
 			final JsonObject idToken = body.getJsonObject("idToken");
@@ -36,9 +36,9 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 				ctx.fail(NAME, "No mandatory field 'idToken'");
 			}
 				
-			final String id = idToken.getString("id");
-			if (id == null){
-				ctx.fail(NAME, "No mandatory field 'id'");
+			final String user_id = idToken.getString("user_id");
+			if (user_id == null){
+				ctx.fail(NAME, "No mandatory field 'user_id'");
 			}
 			
 			final String email = idToken.getString("email");
@@ -49,6 +49,16 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 			final boolean verified = idToken.getBoolean("verified_email");
 			if (!verified){
 				ctx.fail(NAME, "No mandatory field 'verified_email' or email not verified");
+			}
+			
+			final int expires_in = idToken.getInteger("expires_in");
+			if (expires_in<=0){
+				ctx.fail(NAME, "Access Token expired");
+			}
+			
+			final String issuedTo = idToken.getString("issued_to");
+			if (issuedTo == null){
+				ctx.fail(NAME, "No mandatory field 'issuedTo'");
 			}
 			
 			Google2Client client  = new Google2Client("808329566012-tqr8qoh111942gd2kg007t0s8f277roi.apps.googleusercontent.com","Xx4rKucb5ZYTaXlcZX9HLfZW");
@@ -62,9 +72,13 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 				ctx.fail(NAME, "Invalid Email");
 			}
 			
-			if(!profile.getId().equals(id)){
+			if(!profile.getId().equals(user_id)){
 				ctx.fail(NAME, "Invalid UserId");
 			}
+			if(!issuedTo.equals("808329566012-tqr8qoh111942gd2kg007t0s8f277roi.apps.googleusercontent.com")){
+				ctx.fail(NAME, "Invalid issued_to");
+			}
+			
 			ctx.next();
 		}
 	
