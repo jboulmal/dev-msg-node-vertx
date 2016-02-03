@@ -35,6 +35,7 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 		else	
 		{
 			final String accessToken = body.getString("accessToken");
+			
 			if (accessToken == null){
 				ctx.fail(NAME, "No mandatory field 'accessToken'");
 			}
@@ -68,6 +69,7 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 			if (issuedTo == null){
 				ctx.fail(NAME, "No mandatory field 'issuedTo'");
 			}
+			
 			final String idp = body.getString("idp");
 			if (idp == null){
 				ctx.fail(NAME, "No mandatory field 'idp'");
@@ -89,21 +91,17 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 				final UserProfile profile = clt.getUserProfile(null,accessToken);
 			
 				Map <String,Object> atributes = profile.getAttributes();
-									
-				JsonArray email_atribute = new JsonArray(atributes.get("emails").toString());
-				JsonObject emails = email_atribute.getJsonObject(0);
-			
-				if(!emails.getString("value").toString().equals(email)){
+				
+				if(!IDPClientType.getEmail(IDPClientType.fromString(idp), atributes).equals(email)){
 					ctx.fail(NAME, "Invalid Email");
 				}
 				
 				if(!profile.getId().equals(user_id)){
 					ctx.fail(NAME, "Invalid UserId");
 				}
-
+				
 				ctx.next();
 			
-
 			} catch (InvalidNameException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

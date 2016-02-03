@@ -1,6 +1,11 @@
 package eu.rethink.mn.pipeline.utils;
 
+import java.util.Map;
+
 import javax.naming.InvalidNameException;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public enum IDPClientType {
 	FACEBOOK("facebook"),
@@ -35,7 +40,7 @@ public enum IDPClientType {
 		 switch(type)
 		 	{
 		 	case FACEBOOK:
-				return "";
+				return "FacebookClient";
 			case TWITTER:
 				return "";
 			case GOOGLE_OAUTH:
@@ -46,5 +51,26 @@ public enum IDPClientType {
 				throw new InvalidNameException("Invalid Client Type");
 		 	}
 	  	}
+	  public static String getEmail(IDPClientType type, Map <String,Object> atributes) throws InvalidNameException 
+	  	{
+		
+		 switch(type)
+		 	{
+		 	case FACEBOOK:
+				return atributes.get("email").toString();
+			case TWITTER:
+				return "";
+			case GOOGLE_OAUTH:
+				JsonArray email_atribute = new JsonArray(atributes.get("emails").toString());
+				JsonObject emails = email_atribute.getJsonObject(0);
+				return emails.getString("value").toString();
+			case GOOGLE_OPENID:
+				return "";
+			default:
+				throw new InvalidNameException("Invalid Client Type");
+		 	}
+	  	}
+	  
+	  
 }
 

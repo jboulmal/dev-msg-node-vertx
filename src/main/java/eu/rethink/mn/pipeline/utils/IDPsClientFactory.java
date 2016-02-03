@@ -14,11 +14,11 @@ import org.pac4j.oidc.client.GoogleOidcClient;
 
 public class IDPsClientFactory {
 	final static String key_google = "808329566012-tqr8qoh111942gd2kg007t0s8f277roi.apps.googleusercontent.com";
-	final static String key_facebook = "";
+	final static String key_facebook = "1730891197144695";
 	final static String key_twitter = "";
 	final static String key_openid = "";
 	final static String secret_google = "Xx4rKucb5ZYTaXlcZX9HLfZW";
-	final static String secret_facebook = "";
+	final static String secret_facebook = "2e84420614aa647c1062b03f9f3880ba";
 	final static String secret_twitter = "";
 	final static String secret_openid = "";
 	
