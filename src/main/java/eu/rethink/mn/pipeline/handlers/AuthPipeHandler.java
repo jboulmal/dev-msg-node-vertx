@@ -1,12 +1,20 @@
 package eu.rethink.mn.pipeline.handlers;
 
 import java.util.Map;
+
+import javax.naming.InvalidNameException;
+
+import org.pac4j.core.client.Clients;
 import org.pac4j.core.profile.UserProfile;
-import org.pac4j.oauth.client.Google2Client;
+import org.pac4j.oauth.client.BaseOAuth20StateClient;
+import org.pac4j.oauth.profile.OAuth20Profile;
 
 import eu.rethink.mn.pipeline.PipeContext;
 import eu.rethink.mn.pipeline.message.PipeMessage;
+import eu.rethink.mn.pipeline.utils.IDPClientType;
+import eu.rethink.mn.pipeline.utils.IDPsClientFactory;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class AuthPipeHandler implements Handler<PipeContext> {
@@ -60,26 +68,47 @@ public class AuthPipeHandler implements Handler<PipeContext> {
 			if (issuedTo == null){
 				ctx.fail(NAME, "No mandatory field 'issuedTo'");
 			}
+			final String idp = body.getString("idp");
+			if (idp == null){
+				ctx.fail(NAME, "No mandatory field 'idp'");
+			}
 			
-			Google2Client client  = new Google2Client("808329566012-tqr8qoh111942gd2kg007t0s8f277roi.apps.googleusercontent.com","Xx4rKucb5ZYTaXlcZX9HLfZW");
-			client.setCallbackUrl("http://localhost");
+			
+			Clients clients = null;
+			try {
+				clients = IDPsClientFactory.getIDPClient(IDPClientType.fromString(idp));	
+			} catch (InvalidNameException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				@SuppressWarnings("unchecked")
+				BaseOAuth20StateClient<OAuth20Profile> clt = (BaseOAuth20StateClient<OAuth20Profile>) clients.findClient(IDPClientType.classString(IDPClientType.fromString(idp)));
+				
+				final UserProfile profile = clt.getUserProfile(null,accessToken);
+			
+				Map <String,Object> atributes = profile.getAttributes();
+									
+				JsonArray email_atribute = new JsonArray(atributes.get("emails").toString());
+				JsonObject emails = email_atribute.getJsonObject(0);
+			
+				if(!emails.getString("value").toString().equals(email)){
+					ctx.fail(NAME, "Invalid Email");
+				}
+				
+				if(!profile.getId().equals(user_id)){
+					ctx.fail(NAME, "Invalid UserId");
+				}
 
-			final UserProfile profile = client.getUserProfile(accessToken);
+				ctx.next();
 			
-			Map <String,Object> atributes = profile.getAttributes();
-			
-			if(!atributes.get("email").toString().equals(email)){
-				ctx.fail(NAME, "Invalid Email");
+
+			} catch (InvalidNameException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-			if(!profile.getId().equals(user_id)){
-				ctx.fail(NAME, "Invalid UserId");
-			}
-			if(!issuedTo.equals("808329566012-tqr8qoh111942gd2kg007t0s8f277roi.apps.googleusercontent.com")){
-				ctx.fail(NAME, "Invalid issued_to");
-			}
-			
-			ctx.next();
+
 		}
 	
 	}
