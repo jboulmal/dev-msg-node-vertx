@@ -39,6 +39,7 @@ import eu.rethink.mn.component.SessionManager;
 import eu.rethink.mn.component.SubscriptionManager;
 import eu.rethink.mn.pipeline.PipeRegistry;
 import eu.rethink.mn.pipeline.Pipeline;
+import eu.rethink.mn.pipeline.handlers.PoliciesPipeHandler;
 import eu.rethink.mn.pipeline.handlers.TransitionPipeHandler;
 import eu.rethink.mn.pipeline.handlers.ValidatorPipeHandler;
 import io.vertx.core.AbstractVerticle;
@@ -55,12 +56,12 @@ public class MsgNode extends AbstractVerticle {
 
 	public static void main(String[] args) {
 		if (args.length == 1) {
-			
+
 			//load node.config.json
 			final NodeConfig config = readConfig("node.config.json");
 			System.out.println("[Config] File Found");
 			System.out.println(config);
-			
+
 			try {
 				final int port = Integer.parseInt(args[0]);
 
@@ -97,53 +98,53 @@ public class MsgNode extends AbstractVerticle {
 	public static NodeConfig readConfig(String filePath) {
 		final ObjectMapper objectMapper = new ObjectMapper();
 		final NodeConfig config = new NodeConfig();
-		
+
 		try {
 			String configSelect = System.getenv("MSG_NODE_CONFIG");
 			if (configSelect == null) {
 				System.out.println("[Config] No enviroment variable MSG_NODE_CONFIG, default to dev");
 				configSelect = "dev";
 			}
-			
+
 			config.setSelected(configSelect);
-			
+
 			final File file = new File(filePath);
 		    final JsonNode node = objectMapper.readValue(file, JsonNode.class);
-		    
+
 		    final JsonNode selectedNode =  node.get(configSelect);
 		    if (selectedNode == null) {
 		    	System.out.println("[Config] No " + configSelect + " field found!");
 		    	System.exit(-1);
 		    }
-		    
+
 		    final JsonNode domainNode = selectedNode.get("domain");
 		    if (domainNode == null) {
 		    	System.out.println("[Config] No " + configSelect + ".domain field found!");
 		    	System.exit(-1);
 		    }
-		    
+
 		    config.setDomain(domainNode.asText());
-		    
+
    		    final JsonNode registryNode = selectedNode.get("registry");
 		    if (registryNode == null) {
 		    	System.out.println("[Config] No " + configSelect + ".registry field found!");
 		    	System.exit(-1);
 		    }
-		    
+
 		    final JsonNode globalregistryNode = selectedNode.get("globalregistry");
 		    if (globalregistryNode == null) {
 		    	System.out.println("[Config] No " + configSelect + ".globalregistry field found!");
 		    	System.exit(-1);
 		    }
-		    
+
 		} catch (IOException e) {
 		    e.printStackTrace();
 		    System.exit(-1);
 		}
-		
+
 		return config;
 	}
-	
+
 	public MsgNode(ClusterManager mgr, String domain,int port) {
 		this.mgr = mgr;
 		this.domain = domain;
@@ -160,13 +161,14 @@ public class MsgNode extends AbstractVerticle {
 
 		final RegistryConnector rc = new RegistryConnector(register);
 		register.installComponent(rc);
-		
+
 		final GlobalRegistryConnector grc = new GlobalRegistryConnector(register);
 		register.installComponent(grc);
 
 		final Pipeline pipeline = new Pipeline(register)
 			.addHandler(new ValidatorPipeHandler())
 			.addHandler(new TransitionPipeHandler())
+			.addHandler(new PoliciesPipeHandler())
 			.failHandler(error -> {
 				out.println("PIPELINE-FAIL: " + error);
 			});
